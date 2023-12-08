@@ -1,0 +1,59 @@
+services:
+  bitwarden:
+    depends_on:
+      - db
+    environment:
+      BW_DB_PROVIDER: "mysql"
+      BW_DB_SERVER: "db"
+      BW_DB_DATABASE: "bitwarden_vault"
+      BW_DB_USERNAME: "bitwarden"
+      BW_DB_PASSWORD: "Amph85kuchen!"
+      BW_DOMAIN: "bitwarden.weyne.org"
+      #der Install-Key kann von folgender Seite abgerufen werden https://bitwarden.com/de-DE/host/
+      #BW_INSTALLATION_ID: ???
+      #BW_INSTALLATION_KEY: ???      
+      #globalSettings__mail__replyToEmail: "postmaster@domain.tld"
+      #globalSettings__mail__smtp__host: "mail.domain.tld"
+      #globalSettings__mail__smtp__port: "587"
+      #globalSettings__mail__smtp__ssl: "true"
+      #globalSettings__mail__smtp__username: "user@domain.tld"
+      #globalSettings__mail__smtp__password: "???"
+      #Allow Registrations?
+      globalSettings__disableUserRegistration: "false"
+      #Admin-Accounts:
+      adminSettings__admins: "weyne.becker@gmail.com"
+    #Labels f  r ReverseProxy, siehe: https://www.libe.net/traefik
+    #labels:
+     # - "traefik.enable=true"
+     # - "traefik.http.routers.bw.rule=Host(`bitwarden.libe.net`)"      
+     # - "traefik.http.routers.bw.entrypoints=web"
+     # - "traefik.http.routers.bw.entrypoints=websecure"
+     # - "traefik.http.routers.bw.tls.certresolver=myresolver"
+     # - "traefik.http.services.bw.loadbalancer.server.port=8080"
+    image: bitwarden/self-host:dev
+    restart: always
+    expose:
+      - "8080"
+    #F  r einen direkten Test-Zugriff, in den folgenden 2 Zeilen "#" entfernen. Aufruf: http://localhost:8080 oder http://ServerIP:8080
+    #ports:
+    #  - "8080:8080"
+    volumes:
+      - ./bitwarden:/etc/bitwarden
+      - ./logs:/var/log/bitwarden
+  db:
+    environment:
+      MARIADB_USER: "bitwarden"
+      MARIADB_PASSWORD: "Amph85kuchen!"
+      MARIADB_DATABASE: "bitwarden_vault"
+      MARIADB_RANDOM_ROOT_PASSWORD: "true"
+    image: mariadb:10
+    restart: always
+    volumes:
+      - ./db:/var/lib/mysql
+
+#Ohne dem Einsatz eines Reverse Proxy (https://www.libe.net/traefik) fehlt voraussichtlich das Netzwerk webproxy 
+#und die folgenden Zeilen k  nnen entfernt oder auskommentiert werden. Alternativ kann das Netzwerk mit "docker network create webproxy" erstellt werden
+networks:
+  default:
+    name: webproxy
+    external: true
